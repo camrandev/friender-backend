@@ -80,3 +80,10 @@ def get_file():
 
     return "after try-except"
 
+
+# for Update Profile route
+# from geoalchemy2.elements import WKTElement
+
+# # For instance, to set the location of a user at latitude 12.34 and longitude 56.78:
+# user.location = WKTElement(f'POINT(12.34 56.78)', srid=4326)
+

@@ -3,8 +3,11 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from datetime import datetime
-from sqlalchemy import Enum
-import enum
+from geoalchemy2 import Geometry
+from sqlalchemy import func
+from geoalchemy2.functions import ST_DWithin
+from geoalchemy2.elements import WKTElement
+
 
 bcrypt = Bcrypt()
 db = SQLAlchemy()
@@ -122,6 +125,8 @@ class User(db.Model):
         default="",
     )
 
+    location = db.Column(Geometry(geometry_type='POINT', srid=4326))
+
     match_radius = db.Column(db.Integer, nullable=False, default=10000)
 
     profile_img_url = db.Column(
@@ -204,6 +209,39 @@ class User(db.Model):
         return False
 
     # method - get potentials
+"""
+from geoalchemy2 import Geometry
+from sqlalchemy import func
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+    location_id = db.Column(db.Integer, db.ForeignKey('locations.id'))
+
+    location = db.relationship('Location')
+
+class Location(db.Model):
+    __tablename__ = 'locations'
+
+    id = db.Column(db.Integer, primary_key=True)
+    coordinates = db.Column(Geometry('POINT'))
+
+# Perform a geolocation query example
+target_latitude = 37.7749
+target_longitude = -122.4194
+target_point = f'POINT({target_longitude} {target_latitude})'
+distance_threshold = 1000  # In meters
+
+# Find users within the given distance threshold of the target point
+users_within_distance = User.query.join(User.location).filter(
+    func.ST_DWithin(Location.coordinates, func.ST_GeomFromText(target_point), distance_threshold)
+).all()
+"""
 
     # get all users within the radius
 
@@ -224,6 +262,11 @@ class User(db.Model):
         found_user_list = [user for user in self.following if user == other_user]
         return len(found_user_list) == 1
 
+    def nearyby_users(self):
+        """Gets users within curren users radius"""
+        radius = self.radius / 24902 * 360
+        nearby_users = User.query.filter(
+            ST_DWithin(User.location, self.location, radius)).all()
 
 
 
