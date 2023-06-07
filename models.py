@@ -24,6 +24,64 @@ def connect_db(app):
     db.app = app
     db.init_app(app)
 
+class Likes(db.Model):
+    """represents a match between two users"""
+
+    __tablename__ = "likes"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    liker_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="cascade"))
+
+    likee_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="cascade"))
+
+
+class Rejects(db.Model):
+    """represents a match between two users"""
+
+    __tablename__ = "rejects"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    rejecter_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="cascade"))
+
+    rejectee_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="cascade"))
+
+
+"""
+Like Model
+- PK id
+- liker_id
+- likee_id
+
+scenario 1: camran likes kenny
+- like relationship created
+- camran appears in kenny.liked_by
+- kenny appears in camran.liked
+
+
+Rejects Model
+
+- kenny rejects camran
+- reject relation created
+- camran appears in kenny.rejected
+- kenny appears in camran.rejected_by
+
+"""
 
 class User(db.Model):
     """User in the system."""
@@ -84,15 +142,21 @@ class User(db.Model):
         default="",
     )
 
-    matcher_matches = db.relationship(
-        "Matches",
-        foreign_keys="Matches.matcher_id",
-        backref="matcher")
+    likes = db.relationship(
+        "User",
+        secondary="likes",
+        primaryjoin=(Likes.liker_id == id),
+        secondaryjoin=(Likes.likee_id == id),
+        backref="liked_by",
+    )
 
-    matchee_matches = db.relationship(
-        "Matches",
-        foreign_keys="Matches.matchee_id",
-        backref="matchee")
+    rejects = db.relationship(
+        "User",
+        secondary="rejects",
+        primaryjoin=(Rejects.rejecter_id == id),
+        secondaryjoin=(Rejects.rejectee_id == id),
+        backref="rejected_by",
+    )
 
     messages = db.relationship("Message", backref="user")
 
@@ -139,6 +203,15 @@ class User(db.Model):
 
         return False
 
+    # method - get potentials
+
+    # get all users within the radius
+
+    # filter previous value to filter the folowing
+        #   user.liked
+        #   user.rejected
+        #   user.rejected_by
+
     def is_followed_by(self, other_user):
         """Is this user followed by `other_user`?"""
 
@@ -152,31 +225,6 @@ class User(db.Model):
         return len(found_user_list) == 1
 
 
-class MatchStatus(enum.Enum):
-    accepted = "accepted"
-    rejected = "rejected"
-    pending = "pending"
-
-
-class Matches(db.Model):
-    """represents a match between two users"""
-
-    __tablename__ = "matches"
-
-    id = db.Column(
-        db.Integer,
-        primary_key=True,
-    )
-
-    matcher_id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id", ondelete="cascade"))
-
-    matchee_id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id", ondelete="cascade"))
-
-    status = db.Column(Enum(MatchStatus), nullable=False, default=MatchStatus.pending)
 
 
 
