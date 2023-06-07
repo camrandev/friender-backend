@@ -6,6 +6,7 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 import boto3
 import tempfile
+from models import connect_db, db
 
 load_dotenv()
 
@@ -19,11 +20,9 @@ app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 # toolbar = DebugToolbarExtension(app)
 
+connect_db(app)
 
-# will be built in db model file
-# connect_db(app)
-
-#
+# s3 client
 s3 = boto3.client(
   "s3",
   os.environ['AWS_REGION'],
@@ -68,4 +67,16 @@ def get_file():
     testing getting a file from S3
     """
 
-    
+    try:
+        url = s3.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': bucket_name,'Key': 'users/test_s3.txt'},
+            ExpiresIn=3600)
+        print('url generation successful')
+        print('url=',url)
+        return url
+    except Exception as e:
+        print(f"Error uploading file: {str(e)}")
+
+    return "after try-except"
+
