@@ -30,10 +30,21 @@ s3 = boto3.client(
   aws_secret_access_key=os.environ['AWS_SECRET_KEY']
 )
 
+bucket_name = os.environ['S3_BUCKET']
+
+# receive POST file upload from front-end
+# have user in g.user global context
 @app.route('/s3', methods=["GET", "POST"])
 def pictures():
     """
     basic route to test our S3 config
     """
+
+# f'users/{g.user.id}/{os.path.basename(file_path)}'
+    try:
+        s3.upload_file('./test_s3.txt', bucket_name, "test")
+        print("File uploaded successfully.")
+    except Exception as e:
+        print(f"Error uploading file: {str(e)}")
 
     return s3
