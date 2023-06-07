@@ -84,7 +84,15 @@ class User(db.Model):
         default="",
     )
 
-    matches = db.relationship("Matches", backref="user")
+    matcher_matches = db.relationship(
+        "Matches",
+        foreign_keys="Matches.matcher_id",
+        backref="matcher")
+
+    matchee_matches = db.relationship(
+        "Matches",
+        foreign_keys="Matches.matchee_id",
+        backref="matchee")
 
     messages = db.relationship("Message", backref="user")
 
@@ -160,13 +168,17 @@ class Matches(db.Model):
         primary_key=True,
     )
 
-    matcher_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
+    matcher_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="cascade"))
 
-    matchee_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
+    matchee_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="cascade"))
 
     status = db.Column(Enum(MatchStatus), nullable=False, default=MatchStatus.pending)
 
-    
+
 
 
 # messages

@@ -1,1 +1,19 @@
 this file is for testing s3 uploads
+     |like|reject
+user1|
+user2|
+
+User1
+remove users that have been liked, not a matchers
+remove users where either side has reject
+
+matches where user1 initiates
+(like, ---)
+(like, like)
+(like, reject)
+
+matches where user2 initiates, from perspective of user1
+*(---, like)
+(reject, like)
+(like, like)
+
