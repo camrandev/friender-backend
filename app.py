@@ -13,7 +13,8 @@ from flask_jwt_extended import (
 import boto3
 import tempfile
 from models import connect_db, db, User
-from forms import AuthForm
+from forms import AuthForm, ProfileForm
+from werkzeug.datastructures import MultiDict
 
 load_dotenv()
 
@@ -94,16 +95,61 @@ def get_file():
 
 
 ### User Routes
-@app.route("/user/<email>", methods=["GET"])
+@app.route("/user/<path:email>", methods=["GET"])
 def get_one_user(email):
     user = User.query.filter_by(email=email).first()
     print('user=', user)
     if not user:
         raise NameError("a user with this email does not exist")
 
-
     user = user.serialize()
     return jsonify(user=user)
+
+@app.route("/user/<path:email>/update", methods=["PATCH", "PUT"])
+def update_profile(email):
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        raise NameError("a user with this email does not exist")
+
+    email = request.json.get("email", None)
+    first_name = request.json.get("firstName", None)
+    last_name = request.json.get("lastName", None)
+    hobbies = request.json.get("hobbies", None)
+    interests = request.json.get("interests", None)
+    zip_code = request.json.get("zipcode", None)
+    match_radius = request.json.get("radius", None)
+    profile_img_url = request.json.get("img_url", None)
+
+    data={
+        "email": email,
+        "first_name": first_name,
+        "last_name": last_name,
+        "hobbies": hobbies,
+        "interests": interests,
+        "zip_code": zip_code,
+        "match_radius": match_radius,
+        "profile_img_url": profile_img_url}
+
+    form = ProfileForm(MultiDict(data))
+
+    print("\n\n\nform.data=",form.data)
+
+    if form.validate():
+        user.email = request.json.get("email", user.email)
+        user.first_name = request.json.get("firstName", user.first_name)
+        user.last_name = request.json.get("lastName", user.last_name)
+        user.hobbies = request.json.get("hobbies", user.hobbies)
+        user.interests = request.json.get("interests", user.interests)
+        user.zip_code = request.json.get("zipcode", user.zip_code)
+        user.match_radius = request.json.get("radius", user.match_radius)
+        user.profile_img_url = request.json.get("img_url", user.profile_img_url)
+        db.session.commit()
+
+        return jsonify(user=user.serialize())
+    else:
+        return jsonify({'errors': form.errors}), 400
+
+
 
 
 # auth routes
@@ -134,10 +180,12 @@ def signup():
             )
             db.session.commit()
             access_token = create_access_token(identity=user.email)
-            return jsonify(access_token=access_token)
+            return jsonify(access_token=access_token), 201
         except IntegrityError:
             error = {"error": "email already exists"}
             return jsonify(error)
+    else:
+        return jsonify({'errors': form.errors}), 400
 
 
 @app.route("/login", methods=["POST"])
@@ -146,7 +194,7 @@ def login():
     password = request.json.get("password", None)
     print(email, password)
 
-    form = AuthForm(obj={"email": email, "password": password})
+    form = AuthForm(data={"email": email, "password": password})
 
     if form.validate_on_submit():
         user = User.authenticate(
@@ -159,6 +207,8 @@ def login():
         else:
             error = {"error": "Credentials did not authenticate."}
             return jsonify(error)
+    else:
+        return jsonify({'errors': form.errors}), 400
 
 
 # Protect a route with jwt_required, which will kick out requests

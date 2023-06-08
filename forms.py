@@ -1,9 +1,9 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField
+from wtforms import StringField, PasswordField, TextAreaField, IntegerField
 from wtforms.validators import InputRequired, Email, Length, URL, Optional
 
 class AuthForm(FlaskForm):
-    """Login form."""
+    """Auth form for Login and Signup."""
 
     class Meta:
         """Disable CSRF."""
@@ -11,14 +11,58 @@ class AuthForm(FlaskForm):
 
     email = StringField(
         'Email',
-        validators=[InputRequired(), Email(), Length(max=30)],
+        validators=[InputRequired(), Email(), Length(max=50)],
     )
 
     password = PasswordField(
         'Password',
-        validators=[InputRequired(), Length(min=6, max=50)],
+        validators=[InputRequired(), Length(min=6, max=100)],
     )
 
+class ProfileForm(FlaskForm):
+    """Profile form."""
 
+    class Meta:
+        """Disable CSRF."""
+        csrf = False
 
+    email = StringField(
+        'Email',
+        validators=[InputRequired(), Email(), Length(max=50)],
+    )
+
+    first_name = StringField(
+        "First Name",
+        validators=[InputRequired(), Length(max=50)],
+    )
+
+    last_name = StringField(
+        "Last Name",
+        validators=[InputRequired(), Length(max=50)],
+    )
+
+    zip_code = StringField(
+        "Zip Code",
+        validators=[InputRequired(), Length(max=50)],
+    )
+
+    match_radius = IntegerField(
+        "Match Radius",
+        validators=[InputRequired()]
+    )
+
+    profile_img_url = StringField(
+        "Profile Image Url",
+        validators=[InputRequired(), Length(max=255)],
+    )
+
+    hobbies = StringField(
+        "Hobbies",
+        validators=[InputRequired()],
+    )
+
+    interests = StringField(
+        "Interests",
+        validators=[InputRequired()],
+    )
 
