@@ -94,7 +94,7 @@ def get_file():
 
 
 # auth routes
-@app.route("/signup", methods=["GET", "POST"])
+@app.route("/signup", methods=["POST"])
 def signup():
     """Handle user signup.
 
@@ -105,27 +105,23 @@ def signup():
     If the there already is a user with that username: flash message
     and re-present form.
     """
+    email = request.json.get("email", None)
+    password = request.json.get("password", None)
 
-    form = AuthForm()
+    form = AuthForm(obj={"email": email, "password": password})
 
     if form.validate_on_submit():
         try:
             user = User.signup(
-                password=form.password.data,
-                email=form.email.data,
+                email=email,
+                password=password,
             )
             db.session.commit()
-
+            access_token = create_access_token(identity=user.email)
+            return jsonify(access_token=access_token)
         except IntegrityError:
             error = {"error":"email already exists"}
             return jsonify(error)
-
-        do_login(user)
-
-        return redirect("/")
-
-    else:
-        return render_template("users/signup.html", form=form)
 
 
 @app.route("/login", methods=["POST"])
@@ -133,11 +129,20 @@ def login():
     email = request.json.get("email", None)
     password = request.json.get("password", None)
     print(email, password)
-    if email != "test" or password != "test":
-        return jsonify({"msg": "Bad email or password"}), 401
 
-    access_token = create_access_token(identity=email)
-    return jsonify(access_token=access_token)
+    form = AuthForm(obj={"email": email, "password": password})
+
+    if form.validate_on_submit():
+        user = User.authenticate(
+            email=email,
+            password=password,
+        )
+        if user:
+            access_token = create_access_token(identity=user.email)
+            return jsonify(access_token=access_token)
+        else:
+            error = {"error":"Credentials did not authenticate."}
+            return jsonify(error)
 
 
 # Protect a route with jwt_required, which will kick out requests

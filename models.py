@@ -186,8 +186,8 @@ class User(db.Model):
         return user
 
     @classmethod
-    def authenticate(cls, username, password):
-        """Find user with `username` and `password`.
+    def authenticate(cls, email, password):
+        """Find user with `email` and `password`.
 
         This is a class method (call it on the class, not an individual user.)
         It searches for a user whose password hash matches this password
@@ -197,7 +197,7 @@ class User(db.Model):
         False.
         """
 
-        user = cls.query.filter_by(username=username).one_or_none()
+        user = cls.query.filter_by(email=email).one_or_none()
 
         if user:
             is_auth = bcrypt.check_password_hash(user.password, password)
