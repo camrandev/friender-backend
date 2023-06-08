@@ -164,6 +164,32 @@ def update_profile(email):
     else:
         return jsonify({"errors": form.errors}), 400
 
+@app.route("/user/<path:email>/likes", methods=["POST"])
+def likes(email):
+    print('email=',email)
+    likee_id = request.json.get("likeeId", None)
+    user = User.query.filter_by(email=email).first()
+    likee = User.query.get_or_404(likee_id)
+
+    print('user=',user)
+    print('likee=',likee)
+    user.likes.append(likee)
+    db.session.commit()
+    return jsonify(user=user.serialize()), 201
+
+@app.route("/user/<path:email>/rejects", methods=["POST"])
+def rejects(email):
+    print('email=',email)
+    rejectee_id = request.json.get("rejecteeId", None)
+    user = User.query.filter_by(email=email).first()
+    rejectee = User.query.get_or_404(rejectee_id)
+
+    print('user=',user)
+    print('rejectee=',rejectee)
+    user.rejects.append(rejectee)
+    db.session.commit()
+    return jsonify(user=user.serialize()), 201
+
 
 # auth routes
 @app.route("/signup", methods=["POST"])
