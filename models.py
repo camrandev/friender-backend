@@ -209,39 +209,39 @@ class User(db.Model):
         return False
 
     # method - get potentials
-"""
-from geoalchemy2 import Geometry
-from sqlalchemy import func
-from flask_sqlalchemy import SQLAlchemy
+    """
+    from geoalchemy2 import Geometry
+    from sqlalchemy import func
+    from flask_sqlalchemy import SQLAlchemy
 
-db = SQLAlchemy()
+    db = SQLAlchemy()
 
-class User(db.Model):
-    __tablename__ = 'users'
+    class User(db.Model):
+        __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255))
-    location_id = db.Column(db.Integer, db.ForeignKey('locations.id'))
+        id = db.Column(db.Integer, primary_key=True)
+        name = db.Column(db.String(255))
+        location_id = db.Column(db.Integer, db.ForeignKey('locations.id'))
 
-    location = db.relationship('Location')
+        location = db.relationship('Location')
 
-class Location(db.Model):
-    __tablename__ = 'locations'
+    class Location(db.Model):
+        __tablename__ = 'locations'
 
-    id = db.Column(db.Integer, primary_key=True)
-    coordinates = db.Column(Geometry('POINT'))
+        id = db.Column(db.Integer, primary_key=True)
+        coordinates = db.Column(Geometry('POINT'))
 
-# Perform a geolocation query example
-target_latitude = 37.7749
-target_longitude = -122.4194
-target_point = f'POINT({target_longitude} {target_latitude})'
-distance_threshold = 1000  # In meters
+    # Perform a geolocation query example
+    target_latitude = 37.7749
+    target_longitude = -122.4194
+    target_point = f'POINT({target_longitude} {target_latitude})'
+    distance_threshold = 1000  # In meters
 
-# Find users within the given distance threshold of the target point
-users_within_distance = User.query.join(User.location).filter(
-    func.ST_DWithin(Location.coordinates, func.ST_GeomFromText(target_point), distance_threshold)
-).all()
-"""
+    # Find users within the given distance threshold of the target point
+    users_within_distance = User.query.join(User.location).filter(
+        func.ST_DWithin(Location.coordinates, func.ST_GeomFromText(target_point), distance_threshold)
+    ).all()
+    """
 
     # get all users within the radius
 
@@ -250,23 +250,24 @@ users_within_distance = User.query.join(User.location).filter(
         #   user.rejected
         #   user.rejected_by
 
-    def is_followed_by(self, other_user):
-        """Is this user followed by `other_user`?"""
+    # def is_followed_by(self, other_user):
+    #     """Is this user followed by `other_user`?"""
 
-        found_user_list = [user for user in self.followers if user == other_user]
-        return len(found_user_list) == 1
+    #     found_user_list = [user for user in self.followers if user == other_user]
+    #     return len(found_user_list) == 1
 
-    def is_following(self, other_user):
-        """Is this user following `other_use`?"""
+    # def is_following(self, other_user):
+    #     """Is this user following `other_use`?"""
 
-        found_user_list = [user for user in self.following if user == other_user]
-        return len(found_user_list) == 1
+    #     found_user_list = [user for user in self.following if user == other_user]
+    #     return len(found_user_list) == 1
 
     def nearyby_users(self):
         """Gets users within curren users radius"""
         radius = self.radius / 24902 * 360
         nearby_users = User.query.filter(
             ST_DWithin(User.location, self.location, radius)).all()
+        return nearby_users
 
 
 
@@ -287,7 +288,7 @@ class Messages(db.Model):
 
     to_user = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
 
-    body = db.Column(db.String(255), db.ForeignKey("users.id", ondelete="cascade"))
+    body = db.Column(db.String(255), nullable=False)
 
     sent_at = db.Column(
         db.DateTime,
