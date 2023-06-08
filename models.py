@@ -7,6 +7,7 @@ from geoalchemy2 import Geometry
 from sqlalchemy import func
 from geoalchemy2.functions import ST_DWithin
 from geoalchemy2.elements import WKTElement
+from s3_helpers import get_presigned_url
 
 
 bcrypt = Bcrypt()
@@ -27,6 +28,7 @@ def connect_db(app):
     db.app = app
     db.init_app(app)
 
+
 class Likes(db.Model):
     """represents a match between two users"""
 
@@ -37,13 +39,9 @@ class Likes(db.Model):
         primary_key=True,
     )
 
-    liker_id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id", ondelete="cascade"))
+    liker_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
 
-    likee_id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id", ondelete="cascade"))
+    likee_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
 
 
 class Rejects(db.Model):
@@ -56,13 +54,9 @@ class Rejects(db.Model):
         primary_key=True,
     )
 
-    rejecter_id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id", ondelete="cascade"))
+    rejecter_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
 
-    rejectee_id = db.Column(
-        db.Integer,
-        db.ForeignKey("users.id", ondelete="cascade"))
+    rejectee_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
 
 
 """
@@ -85,6 +79,7 @@ Rejects Model
 - kenny appears in camran.rejected_by
 
 """
+
 
 class User(db.Model):
     """User in the system."""
@@ -125,7 +120,7 @@ class User(db.Model):
         default="",
     )
 
-    location = db.Column(Geometry(geometry_type='POINT', srid=4326))
+    location = db.Column(Geometry(geometry_type="POINT", srid=4326))
 
     match_radius = db.Column(db.Integer, nullable=False, default=10000)
 
@@ -257,9 +252,9 @@ class User(db.Model):
     # get all users within the radius
 
     # filter previous value to filter the folowing
-        #   user.liked
-        #   user.rejected
-        #   user.rejected_by
+    #   user.liked
+    #   user.rejected
+    #   user.rejected_by
 
     # def is_followed_by(self, other_user):
     #     """Is this user followed by `other_user`?"""
@@ -278,30 +273,30 @@ class User(db.Model):
         """Gets users within curren users radius"""
         radius = self.match_radius / 24902 * 360
         nearby_users = User.query.filter(
-            ST_DWithin(User.location, self.location, radius)).all()
+            ST_DWithin(User.location, self.location, radius)
+        ).all()
         return nearby_users
 
     def get_potential_matches(self):
         nearby_users = self.nearby_users()
 
         users_to_exclude = self.likes + self.rejects + self.rejected_by + [self]
-        print('users_to_exclude', users_to_exclude)
-        print('nearby_users', nearby_users)
+        print("users_to_exclude", users_to_exclude)
+        print("nearby_users", nearby_users)
 
-        potential_matches = [user.serialize() for user in nearby_users if user not in users_to_exclude]
+        potential_matches = [
+            user.serialize() for user in nearby_users if user not in users_to_exclude
+        ]
+
+        for user in potential_matches:
+            user.profile_img_url = get_presigned_url(user)
 
         return potential_matches
 
-            # filter previous value to filter the folowing
+        # filter previous value to filter the folowing
         #   user.liked
         #   user.rejected
         #   user.rejected_by
-
-
-
-
-
-
 
 
 # # messages

@@ -15,6 +15,7 @@ import tempfile
 from models import connect_db, db, User
 from forms import AuthForm, ProfileForm
 from werkzeug.datastructures import MultiDict
+from s3_helpers import upload_pictures_to_s3
 
 load_dotenv()
 
@@ -100,7 +101,7 @@ def get_file(email):
     try:
         url = s3.generate_presigned_url(
             "get_object",
-            Params={"Bucket": bucket_name, "Key":  f"users/{user.id}/{file_name}"},
+            Params={"Bucket": bucket_name, "Key": f"users/{user.id}/{file_name}"},
             ExpiresIn=3600,
         )
         print("url generation successful")
@@ -121,6 +122,7 @@ def get_potential_matches(email):
         raise NameError("a user with this email does not exist")
     # call user.getPotentials
     potentials = user.get_potential_matches()
+
     print("potentials", potentials)
 
     return jsonify(potentials=potentials)
@@ -143,13 +145,21 @@ def update_profile(email):
     if not user:
         raise NameError("a user with this email does not exist")
 
-    email = request.json.get("email", None)
-    first_name = request.json.get("firstName", None)
-    last_name = request.json.get("lastName", None)
-    hobbies = request.json.get("hobbies", None)
-    interests = request.json.get("interests", None)
-    zip_code = request.json.get("zipcode", None)
-    match_radius = request.json.get("radius", None)
+    email = request.form.get("email", None)
+    first_name = request.form.get("firstName", None)
+    last_name = request.form.get("lastName", None)
+    hobbies = request.form.get("hobbies", None)
+    interests = request.form.get("interests", None)
+    zip_code = request.form.get("zipcode", None)
+    match_radius = request.form.get("radius", None)
+    #TODO: test_file needs to be the key from the front-end form
+    profile_image_file = request.files.get("profile_img", None)
+
+    # get file from form that has been submitted
+    # Need to write logic to handle photo portion of of.
+
+    # need logic to handle the zipcode conversion
+
     profile_img_url = request.json.get("img_url", None)
 
     data = {
@@ -175,35 +185,39 @@ def update_profile(email):
         user.interests = request.json.get("interests", user.interests)
         user.zip_code = request.json.get("zipcode", user.zip_code)
         user.match_radius = request.json.get("radius", user.match_radius)
-        user.profile_img_url = request.json.get("img_url", user.profile_img_url)
+
+
+        user.profile_img_url = upload_pictures_to_s3(profile_image_file, user)
         db.session.commit()
 
         return jsonify(user=user.serialize())
     else:
         return jsonify({"errors": form.errors}), 400
 
+
 @app.route("/user/<path:email>/likes", methods=["POST"])
 def likes(email):
-    print('email=',email)
+    print("email=", email)
     likee_id = request.json.get("likeeId", None)
     user = User.query.filter_by(email=email).first()
     likee = User.query.get_or_404(likee_id)
 
-    print('user=',user)
-    print('likee=',likee)
+    print("user=", user)
+    print("likee=", likee)
     user.likes.append(likee)
     db.session.commit()
     return jsonify(user=user.serialize()), 201
 
+
 @app.route("/user/<path:email>/rejects", methods=["POST"])
 def rejects(email):
-    print('email=',email)
+    print("email=", email)
     rejectee_id = request.json.get("rejecteeId", None)
     user = User.query.filter_by(email=email).first()
     rejectee = User.query.get_or_404(rejectee_id)
 
-    print('user=',user)
-    print('rejectee=',rejectee)
+    print("user=", user)
+    print("rejectee=", rejectee)
     user.rejects.append(rejectee)
     db.session.commit()
     return jsonify(user=user.serialize()), 201
