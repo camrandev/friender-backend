@@ -163,7 +163,7 @@ class User(db.Model):
         backref="rejected_by",
     )
 
-    messages = db.relationship("Message", backref="user")
+    # messages = db.relationship("Message", backref="user")
 
     def __repr__(self):
         return f"<User #{self.id}:, {self.email}>"
@@ -262,9 +262,10 @@ class User(db.Model):
     #     found_user_list = [user for user in self.following if user == other_user]
     #     return len(found_user_list) == 1
 
-    def nearyby_users(self):
+    # TODO: exclude self
+    def nearby_users(self):
         """Gets users within curren users radius"""
-        radius = self.radius / 24902 * 360
+        radius = self.match_radius / 24902 * 360
         nearby_users = User.query.filter(
             ST_DWithin(User.location, self.location, radius)).all()
         return nearby_users
@@ -273,25 +274,27 @@ class User(db.Model):
 
 
 
-# messages
-class Messages(db.Model):
-    """messages sent between two users"""
+# # messages
+# class Message(db.Model):
+#     """messages sent between two users"""
 
-    __tablename__ = "messages"
+#     __tablename__ = "messages"
 
-    id = db.Column(
-        db.Integer,
-        primary_key=True,
-    )
+#     id = db.Column(
+#         db.Integer,
+#         primary_key=True,
+#     )
 
-    from_user = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
+#     from_user = db.Column(
+#         db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
 
-    to_user = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
+#     to_user = db.Column(
+#         db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
 
-    body = db.Column(db.String(255), nullable=False)
+#     body = db.Column(db.String(255), nullable=False)
 
-    sent_at = db.Column(
-        db.DateTime,
-        nullable=False,
-        default=datetime.utcnow,
-    )
+#     sent_at = db.Column(
+#         db.DateTime,
+#         nullable=False,
+#         default=datetime.utcnow,
+#     )
