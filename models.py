@@ -206,6 +206,19 @@ class User(db.Model):
 
         return False
 
+    def serialize(self):
+        """serializes SQA object to be returned"""
+        return {
+            "email": self.email,
+            "firstName": self.first_name,
+            "lastName": self.last_name,
+            "hobbies": self.hobbies,
+            "interests": self.interests,
+            "zipcode": self.zip_code,
+            "radius": self.match_radius,
+            "img_url": self.profile_img_url,
+        }
+
     # method - get potentials
     """
     from geoalchemy2 import Geometry

@@ -93,6 +93,19 @@ def get_file():
     return "after try-except"
 
 
+### User Routes
+@app.route("/user/<email>", methods=["GET"])
+def get_one_user(email):
+    user = User.query.filter_by(email=email).first()
+    print('user=', user)
+    if not user:
+        raise NameError("a user with this email does not exist")
+
+
+    user = user.serialize()
+    return jsonify(user=user)
+
+
 # auth routes
 @app.route("/signup", methods=["POST"])
 def signup():
@@ -108,9 +121,12 @@ def signup():
     email = request.json.get("email", None)
     password = request.json.get("password", None)
 
-    form = AuthForm(obj={"email": email, "password": password})
+    form = AuthForm(data={"email": email, "password": password})
+    print('form=', form.data)
 
+# TODO: catch validation errors and return them
     if form.validate_on_submit():
+        print('\n\n\n0validated\n\n\n')
         try:
             user = User.signup(
                 email=email,
@@ -120,7 +136,7 @@ def signup():
             access_token = create_access_token(identity=user.email)
             return jsonify(access_token=access_token)
         except IntegrityError:
-            error = {"error":"email already exists"}
+            error = {"error": "email already exists"}
             return jsonify(error)
 
 
@@ -141,7 +157,7 @@ def login():
             access_token = create_access_token(identity=user.email)
             return jsonify(access_token=access_token)
         else:
-            error = {"error":"Credentials did not authenticate."}
+            error = {"error": "Credentials did not authenticate."}
             return jsonify(error)
 
 
