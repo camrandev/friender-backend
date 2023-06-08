@@ -45,11 +45,16 @@ bucket_name = os.environ["S3_BUCKET"]
 
 # receive POST file upload from front-end
 # have user in g.user global context
-@app.route("/s3", methods=["POST"])
-def pictures():
+@app.route("/user/<path:email>/s3", methods=["POST"])
+def pictures(email):
     """
     basic route to test our S3 config
     """
+
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        raise NameError("a user with this email does not exist")
 
     # Need to access user ID from request as well, plug that in
 
@@ -65,24 +70,37 @@ def pictures():
     print(f"{request.files['test_file'].filename}")
 
     try:
-        s3.upload_file(temp_file.name, bucket_name, f"users/1/{file_name}")
+        s3.upload_file(temp_file.name, bucket_name, f"users/{user.id}/{file_name}")
         print("File uploaded successfully.")
+        url = s3.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket_name, "Key": f"users/{user.id}/{file_name}"},
+            ExpiresIn=3600,
+        )
+        user.profile_img_url = file_name
+        db.session.commit()
+        return jsonify(url=url), 201
     except Exception as e:
         print(f"Error uploading file: {str(e)}")
 
-    return "hi"
+    return jsonify(error="something went wrong with the upload"), 500
 
 
-@app.route("/s3", methods=["GET"])
-def get_file():
+@app.route("/user/<path:email>/s3", methods=["GET"])
+def get_file(email):
     """
     testing getting a file from S3
     """
 
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        raise NameError("a user with this email does not exist")
+
     try:
         url = s3.generate_presigned_url(
             "get_object",
-            Params={"Bucket": bucket_name, "Key": "users/test_s3.txt"},
+            Params={"Bucket": bucket_name, "Key":  f"users/{user.id}/{file_name}"},
             ExpiresIn=3600,
         )
         print("url generation successful")
