@@ -95,15 +95,29 @@ def get_file():
 
 
 ### User Routes
+@app.route("/user/<path:email>/potentials", methods=["GET"])
+def get_potential_matches(email):
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        raise NameError("a user with this email does not exist")
+    # call user.getPotentials
+    potentials = user.get_potential_matches()
+    print("potentials", potentials)
+
+    return jsonify(potentials=potentials)
+
+
 @app.route("/user/<path:email>", methods=["GET"])
 def get_one_user(email):
     user = User.query.filter_by(email=email).first()
-    print('user=', user)
+    print("user=", user)
     if not user:
         raise NameError("a user with this email does not exist")
 
     user = user.serialize()
     return jsonify(user=user)
+
 
 @app.route("/user/<path:email>/update", methods=["PATCH", "PUT"])
 def update_profile(email):
@@ -120,7 +134,7 @@ def update_profile(email):
     match_radius = request.json.get("radius", None)
     profile_img_url = request.json.get("img_url", None)
 
-    data={
+    data = {
         "email": email,
         "first_name": first_name,
         "last_name": last_name,
@@ -128,11 +142,12 @@ def update_profile(email):
         "interests": interests,
         "zip_code": zip_code,
         "match_radius": match_radius,
-        "profile_img_url": profile_img_url}
+        "profile_img_url": profile_img_url,
+    }
 
     form = ProfileForm(MultiDict(data))
 
-    print("\n\n\nform.data=",form.data)
+    print("\n\n\nform.data=", form.data)
 
     if form.validate():
         user.email = request.json.get("email", user.email)
@@ -147,9 +162,7 @@ def update_profile(email):
 
         return jsonify(user=user.serialize())
     else:
-        return jsonify({'errors': form.errors}), 400
-
-
+        return jsonify({"errors": form.errors}), 400
 
 
 # auth routes
@@ -168,11 +181,11 @@ def signup():
     password = request.json.get("password", None)
 
     form = AuthForm(data={"email": email, "password": password})
-    print('form=', form.data)
+    print("form=", form.data)
 
-# TODO: catch validation errors and return them
+    # TODO: catch validation errors and return them
     if form.validate_on_submit():
-        print('\n\n\n0validated\n\n\n')
+        print("\n\n\n0validated\n\n\n")
         try:
             user = User.signup(
                 email=email,
@@ -185,7 +198,7 @@ def signup():
             error = {"error": "email already exists"}
             return jsonify(error)
     else:
-        return jsonify({'errors': form.errors}), 400
+        return jsonify({"errors": form.errors}), 400
 
 
 @app.route("/login", methods=["POST"])
@@ -208,7 +221,7 @@ def login():
             error = {"error": "Credentials did not authenticate."}
             return jsonify(error)
     else:
-        return jsonify({'errors': form.errors}), 400
+        return jsonify({"errors": form.errors}), 400
 
 
 # Protect a route with jwt_required, which will kick out requests

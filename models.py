@@ -281,6 +281,25 @@ class User(db.Model):
             ST_DWithin(User.location, self.location, radius)).all()
         return nearby_users
 
+    def get_potential_matches(self):
+        nearby_users = self.nearby_users()
+
+        users_to_exclude = self.likes + self.rejects + self.rejected_by + [self]
+        print('users_to_exclude', users_to_exclude)
+        print('nearby_users', nearby_users)
+
+        potential_matches = [user.serialize() for user in nearby_users if user not in users_to_exclude]
+
+        return potential_matches
+
+            # filter previous value to filter the folowing
+        #   user.liked
+        #   user.rejected
+        #   user.rejected_by
+
+
+
+
 
 
 
