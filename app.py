@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 
 from flask import Flask, request, g, jsonify
+from flask_cors import CORS
 from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import (
     create_access_token,
@@ -19,6 +20,7 @@ load_dotenv()
 CURR_USER_KEY = "curr_user"
 
 app = Flask(__name__)
+CORS(app)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 app.config["SQLALCHEMY_ECHO"] = False
