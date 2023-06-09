@@ -4,16 +4,21 @@ from dotenv import load_dotenv
 from flask import Flask, request, g, jsonify
 from flask_cors import CORS
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_
 from flask_jwt_extended import (
     create_access_token,
     get_jwt_identity,
     jwt_required,
     JWTManager,
 )
-from models import connect_db, db, User
+from models import connect_db, db, User, Message
 from forms import AuthForm, ProfileForm
 from werkzeug.datastructures import MultiDict
 from s3_helpers import s3, upload_pictures_to_s3, get_presigned_url
+from flask_sock import Sock
+
+from datetime import datetime
+import asyncio
 
 load_dotenv()
 
@@ -21,6 +26,7 @@ CURR_USER_KEY = "curr_user"
 
 app = Flask(__name__)
 CORS(app)
+sock = Sock(app)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 app.config["SQLALCHEMY_ECHO"] = False
@@ -224,8 +230,52 @@ def protected():
     return jsonify(logged_in_as=current_user), 200
 
 
-# for Update Profile route
-# from geoalchemy2.elements import WKTElement
 
-# # For instance, to set the location of a user at latitude 12.34 and longitude 56.78:
-# user.location = WKTElement(f'POINT(12.34 56.78)', srid=4326)
+# Route for getting all messages between to matched users
+#  /user/email/matches/email2
+# do the query
+# from sqlalchemy import or_
+
+@app.route("/user/<from_email>/matches/<to_email>", methods=["GET"])
+def get_messages_between_users():
+    user_email_1 = "user1@example.com"
+    user_email_2 = "user2@example.com"
+
+    messages = Message.query.join(
+        User,
+        or_(User.id == Message.from_user, User.id == Message.to_user)).filter(or_(
+        User.email == user_email_1, User.email == user_email_2)).order_by(
+        Message.sent_at).all()
+
+    return jsonify(messages=messages), 200
+
+
+# WebSockets
+
+# Global mapping of email to WebSocket
+ws_map = {}
+
+@app.route('/user/<from_email>/chat/<to_email>', methods=['GET'])
+@sock.route('/user/<from_email>/chat/<to_email>')
+async def chat(ws, from_email, to_email):
+    from_user = User.query.filter_by(email=from_email).first()
+    to_user = User.query.filter_by(email=to_email).first()
+
+    if not from_user or not to_user:
+        await ws.send("Invalid user email")
+        return
+
+    # Add WebSocket to global map
+    ws_map[from_email] = ws
+
+    while True:
+        msg = await ws.receive()
+        message = Message(from_user=from_user.id, to_user=to_user.id, body=msg, sent_at=datetime.utcnow())
+        db.session.add(message)
+        db.session.commit()
+
+        # Send the message to the `to_user` if they are currently connected
+        if to_email in ws_map:
+            await ws_map[to_email].send(msg)
+
+        await ws.send(f"Message sent at {message.sent_at}")

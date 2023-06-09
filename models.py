@@ -10,6 +10,7 @@ from geoalchemy2.elements import WKTElement
 from s3_helpers import get_presigned_url
 from geo_helpers import get_lat_long_by_zip
 
+
 bcrypt = Bcrypt()
 db = SQLAlchemy()
 
@@ -57,6 +58,31 @@ class Rejects(db.Model):
     rejecter_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
 
     rejectee_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
+
+# messages
+class Message(db.Model):
+    """messages sent between two users"""
+
+    __tablename__ = "messages"
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True,
+    )
+
+    from_user = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
+
+    to_user = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
+
+    body = db.Column(db.String(255), nullable=False)
+
+    sent_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow,
+    )
 
 
 """
@@ -159,7 +185,7 @@ class User(db.Model):
         backref="rejected_by",
     )
 
-    # messages = db.relationship("Message", backref="user")
+    messages = db.relationship("Message", backref="user")
 
     def __repr__(self):
         return f"<User #{self.id}:, {self.email}>"
@@ -218,40 +244,6 @@ class User(db.Model):
             else DEFAULT_IMAGE_URL,
         }
 
-    # method - get potentials
-    """
-    from geoalchemy2 import Geometry
-    from sqlalchemy import func
-    from flask_sqlalchemy import SQLAlchemy
-
-    db = SQLAlchemy()
-
-    class User(db.Model):
-        __tablename__ = 'users'
-
-        id = db.Column(db.Integer, primary_key=True)
-        name = db.Column(db.String(255))
-        location_id = db.Column(db.Integer, db.ForeignKey('locations.id'))
-
-        location = db.relationship('Location')
-
-    class Location(db.Model):
-        __tablename__ = 'locations'
-
-        id = db.Column(db.Integer, primary_key=True)
-        coordinates = db.Column(Geometry('POINT'))
-
-    # Perform a geolocation query example
-    target_latitude = 37.7749
-    target_longitude = -122.4194
-    target_point = f'POINT({target_longitude} {target_latitude})'
-    distance_threshold = 1000  # In meters
-
-    # Find users within the given distance threshold of the target point
-    users_within_distance = User.query.join(User.location).filter(
-        func.ST_DWithin(Location.coordinates, func.ST_GeomFromText(target_point), distance_threshold)
-    ).all()
-    """
 
     def set_location(self):
         """Sets the user location based on their zip code"""
@@ -289,27 +281,3 @@ class User(db.Model):
         return matches
 
 
-# # messages
-# class Message(db.Model):
-#     """messages sent between two users"""
-
-#     __tablename__ = "messages"
-
-#     id = db.Column(
-#         db.Integer,
-#         primary_key=True,
-#     )
-
-#     from_user = db.Column(
-#         db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
-
-#     to_user = db.Column(
-#         db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
-
-#     body = db.Column(db.String(255), nullable=False)
-
-#     sent_at = db.Column(
-#         db.DateTime,
-#         nullable=False,
-#         default=datetime.utcnow,
-#     )
