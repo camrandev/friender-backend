@@ -255,7 +255,7 @@ def get_messages_between_users():
 # Global mapping of email to WebSocket
 ws_map = {}
 
-@app.route('/user/<from_email>/chat/<to_email>', methods=['GET'])
+# @app.route('/user/<from_email>/chat/<to_email>', methods=['GET'])
 @sock.route('/user/<from_email>/chat/<to_email>')
 async def chat(ws, from_email, to_email):
     from_user = User.query.filter_by(email=from_email).first()

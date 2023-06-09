@@ -185,7 +185,30 @@ class User(db.Model):
         backref="rejected_by",
     )
 
-    messages = db.relationship("Message", backref="user")
+    # messages = db.relationship("Message", backref="user")
+
+    # messages = db.relationship(
+    #     "Message",
+    #     foreign_keys="[Message.from_user, Message.to_user]",
+    #     backref="user",
+    #     cascade="all, delete-orphan"
+    # )
+
+    sent_messages = db.relationship(
+        "Message",
+        foreign_keys="[Message.from_user]",
+        backref="sender",
+        cascade="all, delete-orphan"
+    )
+
+    received_messages = db.relationship(
+        "Message",
+        foreign_keys="[Message.to_user]",
+        backref="recipient",
+        cascade="all, delete-orphan"
+    )
+
+
 
     def __repr__(self):
         return f"<User #{self.id}:, {self.email}>"
