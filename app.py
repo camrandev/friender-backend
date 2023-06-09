@@ -50,6 +50,7 @@ def get_potential_matches(email):
 @app.route("/user/<path:email>/matches", methods=["GET"])
 def get_matches(email):
     user = User.query.filter_by(email=email).first()
+    print('user=', user)
 
     if not user:
         raise NameError("a user with this email does not exist")
