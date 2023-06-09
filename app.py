@@ -65,6 +65,9 @@ def update_profile(email):
     if not user:
         raise NameError("a user with this email does not exist")
 
+    print('request.form', request.form)
+    print('request.headers',request.headers)
+
     email = request.form.get("email", user.email)
     first_name = request.form.get("firstName", user.first_name)
     last_name = request.form.get("lastName", user.last_name)
@@ -97,9 +100,10 @@ def update_profile(email):
         user.zip_code = zip_code
         user.match_radius = match_radius
 
-        user.setLocation()
-
+        user.set_location()
+        print("\n\n\n")
         if profile_image_file:
+            print("\n\n\nprofile_image_file truthy")
             user.profile_img_file_name = upload_pictures_to_s3(profile_image_file, user)
 
         db.session.commit()
@@ -120,7 +124,7 @@ def likes(email):
     print("likee=", likee)
     user.likes.append(likee)
     db.session.commit()
-    return jsonify(user=user.serialize()), 201
+    return jsonify(potentials=user.get_potential_matches()), 201
 
 
 @app.route("/user/<path:email>/rejects", methods=["POST"])

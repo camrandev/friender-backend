@@ -205,6 +205,7 @@ class User(db.Model):
     def serialize(self):
         """serializes SQA object to be returned"""
         return {
+            "id": self.id,
             "email": self.email,
             "firstName": self.first_name,
             "lastName": self.last_name,
