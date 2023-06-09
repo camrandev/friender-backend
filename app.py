@@ -1,8 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-from flask import Flask, request, session, g, jsonify
-from flask_debugtoolbar import DebugToolbarExtension
+from flask import Flask, request, g, jsonify
 from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import (
     create_access_token,
@@ -10,12 +9,10 @@ from flask_jwt_extended import (
     jwt_required,
     JWTManager,
 )
-import boto3
-import tempfile
 from models import connect_db, db, User
 from forms import AuthForm, ProfileForm
 from werkzeug.datastructures import MultiDict
-from s3_helpers import upload_pictures_to_s3
+from s3_helpers import s3, upload_pictures_to_s3, get_presigned_url
 
 load_dotenv()
 
@@ -32,85 +29,6 @@ app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
 jwt = JWTManager(app)
 
 connect_db(app)
-
-# s3 client
-s3 = boto3.client(
-    "s3",
-    os.environ["AWS_REGION"],
-    aws_access_key_id=os.environ["AWS_ACESS_KEY"],
-    aws_secret_access_key=os.environ["AWS_SECRET_KEY"],
-)
-
-bucket_name = os.environ["S3_BUCKET"]
-
-
-# receive POST file upload from front-end
-# have user in g.user global context
-@app.route("/user/<path:email>/s3", methods=["POST"])
-def pictures(email):
-    """
-    basic route to test our S3 config
-    """
-
-    user = User.query.filter_by(email=email).first()
-
-    if not user:
-        raise NameError("a user with this email does not exist")
-
-    # Need to access user ID from request as well, plug that in
-
-    file = request.files["test_file"]
-    file_name = file.filename
-    print(f"filename={file_name} type={type(file_name)}")
-    file_content = file.read()
-
-    temp_file = tempfile.NamedTemporaryFile(delete=False)
-    temp_file.write(file_content)
-    temp_file.close()
-
-    print(f"{request.files['test_file'].filename}")
-
-    try:
-        s3.upload_file(temp_file.name, bucket_name, f"users/{user.id}/{file_name}")
-        print("File uploaded successfully.")
-        url = s3.generate_presigned_url(
-            "get_object",
-            Params={"Bucket": bucket_name, "Key": f"users/{user.id}/{file_name}"},
-            ExpiresIn=3600,
-        )
-        user.profile_img_url = file_name
-        db.session.commit()
-        return jsonify(url=url), 201
-    except Exception as e:
-        print(f"Error uploading file: {str(e)}")
-
-    return jsonify(error="something went wrong with the upload"), 500
-
-
-@app.route("/user/<path:email>/s3", methods=["GET"])
-def get_file(email):
-    """
-    testing getting a file from S3
-    """
-
-    user = User.query.filter_by(email=email).first()
-
-    if not user:
-        raise NameError("a user with this email does not exist")
-
-    try:
-        url = s3.generate_presigned_url(
-            "get_object",
-            Params={"Bucket": bucket_name, "Key": f"users/{user.id}/{file_name}"},
-            ExpiresIn=3600,
-        )
-        print("url generation successful")
-        print("url=", url)
-        return url
-    except Exception as e:
-        print(f"Error uploading file: {str(e)}")
-
-    return "after try-except"
 
 
 ### User Routes
@@ -145,22 +63,14 @@ def update_profile(email):
     if not user:
         raise NameError("a user with this email does not exist")
 
-    email = request.form.get("email", None)
-    first_name = request.form.get("firstName", None)
-    last_name = request.form.get("lastName", None)
-    hobbies = request.form.get("hobbies", None)
-    interests = request.form.get("interests", None)
-    zip_code = request.form.get("zipcode", None)
-    match_radius = request.form.get("radius", None)
-    #TODO: test_file needs to be the key from the front-end form
-    profile_image_file = request.files.get("profile_img", None)
-
-    # get file from form that has been submitted
-    # Need to write logic to handle photo portion of of.
-
-    # need logic to handle the zipcode conversion
-
-    profile_img_url = request.json.get("img_url", None)
+    email = request.form.get("email", user.email)
+    first_name = request.form.get("firstName", user.first_name)
+    last_name = request.form.get("lastName", user.last_name)
+    hobbies = request.form.get("hobbies", user.hobbies)
+    interests = request.form.get("interests", user.interests)
+    zip_code = request.form.get("zipcode", user.zip_code)
+    match_radius = request.form.get("radius", user.match_radius)
+    profile_image_file = request.files.get("profileImg", None)
 
     data = {
         "email": email,
@@ -170,7 +80,6 @@ def update_profile(email):
         "interests": interests,
         "zip_code": zip_code,
         "match_radius": match_radius,
-        "profile_img_url": profile_img_url,
     }
 
     form = ProfileForm(MultiDict(data))
@@ -178,16 +87,19 @@ def update_profile(email):
     print("\n\n\nform.data=", form.data)
 
     if form.validate():
-        user.email = request.json.get("email", user.email)
-        user.first_name = request.json.get("firstName", user.first_name)
-        user.last_name = request.json.get("lastName", user.last_name)
-        user.hobbies = request.json.get("hobbies", user.hobbies)
-        user.interests = request.json.get("interests", user.interests)
-        user.zip_code = request.json.get("zipcode", user.zip_code)
-        user.match_radius = request.json.get("radius", user.match_radius)
+        user.email = email
+        user.first_name = first_name
+        user.last_name = last_name
+        user.hobbies = hobbies
+        user.interests = interests
+        user.zip_code = zip_code
+        user.match_radius = match_radius
 
+        user.setLocation()
 
-        user.profile_img_url = upload_pictures_to_s3(profile_image_file, user)
+        if profile_image_file:
+            user.profile_img_file_name = upload_pictures_to_s3(profile_image_file, user)
+
         db.session.commit()
 
         return jsonify(user=user.serialize())

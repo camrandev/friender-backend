@@ -51,11 +51,6 @@ class ProfileForm(FlaskForm):
         validators=[InputRequired()]
     )
 
-    profile_img_url = StringField(
-        "Profile Image Url",
-        validators=[InputRequired(), Length(max=255)],
-    )
-
     hobbies = StringField(
         "Hobbies",
         validators=[InputRequired()],

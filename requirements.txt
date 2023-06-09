@@ -14,9 +14,12 @@ executing==1.2.0
 Flask==2.3.2
 Flask-Bcrypt==1.0.1
 Flask-DebugToolbar==0.13.1
+Flask-JWT-Extended==4.5.2
 Flask-SQLAlchemy==3.0.3
 Flask-WTF==1.1.1
 GeoAlchemy2==0.13.3
+geographiclib==2.0
+geopy==2.3.0
 greenlet==2.0.2
 idna==3.4
 ipython==8.14.0
@@ -35,6 +38,7 @@ psycopg2-binary==2.9.6
 ptyprocess==0.7.0
 pure-eval==0.2.2
 Pygments==2.15.1
+PyJWT==2.7.0
 python-dateutil==2.8.2
 python-dotenv==1.0.0
 s3transfer==0.6.1

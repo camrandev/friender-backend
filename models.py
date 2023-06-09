@@ -3,12 +3,12 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from datetime import datetime
-from geoalchemy2 import Geometry
+from geoalchemy2 import Geometry, Geography
 from sqlalchemy import func
 from geoalchemy2.functions import ST_DWithin
 from geoalchemy2.elements import WKTElement
 from s3_helpers import get_presigned_url
-
+from geo_helpers import get_lat_long_by_zip
 
 bcrypt = Bcrypt()
 db = SQLAlchemy()
@@ -120,14 +120,15 @@ class User(db.Model):
         default="",
     )
 
-    location = db.Column(Geometry(geometry_type="POINT", srid=4326))
+    # location = db.Column(Geometry(geometry_type="POINT", srid=4326))
+    location = db.Column(Geography(geometry_type="POINT", srid=4326))
 
     match_radius = db.Column(db.Integer, nullable=False, default=10000)
 
-    profile_img_url = db.Column(
+    profile_img_file_name = db.Column(
         db.String(255),
         nullable=False,
-        default=DEFAULT_IMAGE_URL,
+        default="",
     )
 
     hobbies = db.Column(
@@ -211,7 +212,7 @@ class User(db.Model):
             "interests": self.interests,
             "zipcode": self.zip_code,
             "radius": self.match_radius,
-            "img_url": self.profile_img_url,
+            "profile_img_url": get_presigned_url(self) if self.profile_img_file_name != "" else DEFAULT_IMAGE_URL,
         }
 
     # method - get potentials
@@ -249,54 +250,36 @@ class User(db.Model):
     ).all()
     """
 
-    # get all users within the radius
+    def set_location(self):
+        """Sets the user location based on their zip code"""
+        lat, long = get_lat_long_by_zip(self.zip_code)
+        self.location = WKTElement(f'POINT({lat} {long})', srid=4326)
 
-    # filter previous value to filter the folowing
-    #   user.liked
-    #   user.rejected
-    #   user.rejected_by
-
-    # def is_followed_by(self, other_user):
-    #     """Is this user followed by `other_user`?"""
-
-    #     found_user_list = [user for user in self.followers if user == other_user]
-    #     return len(found_user_list) == 1
-
-    # def is_following(self, other_user):
-    #     """Is this user following `other_use`?"""
-
-    #     found_user_list = [user for user in self.following if user == other_user]
-    #     return len(found_user_list) == 1
-
-    # TODO: exclude self
     def nearby_users(self):
         """Gets users within curren users radius"""
-        radius = self.match_radius / 24902 * 360
+        # radius = self.match_radius / 24902 * 360
+        # nearby_users = User.query.filter(
+        #     ST_DWithin(User.location, self.location, radius)
+        # ).all()
+
+        radius = self.match_radius * 1609.34  # convert miles to meters
         nearby_users = User.query.filter(
-            ST_DWithin(User.location, self.location, radius)
-        ).all()
+            func.ST_DWithin(User.location, self.location, radius)).all()
+
         return nearby_users
 
     def get_potential_matches(self):
         nearby_users = self.nearby_users()
 
         users_to_exclude = self.likes + self.rejects + self.rejected_by + [self]
-        print("users_to_exclude", users_to_exclude)
-        print("nearby_users", nearby_users)
 
         potential_matches = [
             user.serialize() for user in nearby_users if user not in users_to_exclude
         ]
 
-        for user in potential_matches:
-            user.profile_img_url = get_presigned_url(user)
-
         return potential_matches
 
-        # filter previous value to filter the folowing
-        #   user.liked
-        #   user.rejected
-        #   user.rejected_by
+
 
 
 # # messages
