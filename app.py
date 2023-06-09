@@ -47,6 +47,19 @@ def get_potential_matches(email):
 
     return jsonify(potentials=potentials)
 
+@app.route("/user/<path:email>/matches", methods=["GET"])
+def get_matches(email):
+    user = User.query.filter_by(email=email).first()
+
+    if not user:
+        raise NameError("a user with this email does not exist")
+    # call user.getmatches
+    matches = user.get_matches()
+
+    print("matches", matches)
+
+    return jsonify(matches=matches)
+
 
 @app.route("/user/<path:email>", methods=["GET"])
 def get_one_user(email):

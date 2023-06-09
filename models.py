@@ -213,7 +213,9 @@ class User(db.Model):
             "interests": self.interests,
             "zipcode": self.zip_code,
             "radius": self.match_radius,
-            "profile_img_url": get_presigned_url(self) if self.profile_img_file_name != "" else DEFAULT_IMAGE_URL,
+            "profile_img_url": get_presigned_url(self)
+            if self.profile_img_file_name != ""
+            else DEFAULT_IMAGE_URL,
         }
 
     # method - get potentials
@@ -254,7 +256,7 @@ class User(db.Model):
     def set_location(self):
         """Sets the user location based on their zip code"""
         lat, long = get_lat_long_by_zip(self.zip_code)
-        self.location = WKTElement(f'POINT({lat} {long})', srid=4326)
+        self.location = WKTElement(f"POINT({lat} {long})", srid=4326)
 
     def nearby_users(self):
         """Gets users within curren users radius"""
@@ -265,7 +267,8 @@ class User(db.Model):
 
         radius = self.match_radius * 1609.34  # convert miles to meters
         nearby_users = User.query.filter(
-            func.ST_DWithin(User.location, self.location, radius)).all()
+            func.ST_DWithin(User.location, self.location, radius)
+        ).all()
 
         return nearby_users
 
@@ -280,7 +283,10 @@ class User(db.Model):
 
         return potential_matches
 
+    def get_matches(self):
+        matches = [user.serialize() for user in self.likes if user in self.liked_by]
 
+        return matches
 
 
 # # messages
