@@ -1,0 +1,18 @@
+email,password,first_name,last_name,zip_code,match_radius,profile_img_file_name,hobbies,interests
+jamielannister@example.com,password1,Jaime,Lannister,02215,4,,"Sword fighting and serving in the Kingsguard.","Interested in chivalry and the history of the Seven Kingdoms."
+cersei@example.com,password1,Cersei,Lannister,02130,3,,"Engaging in political machinations and protecting her family's power.","Interested in Westerosi politics and fine wine."
+princetommen@example.com,password1,Tommen,Baratheon,02139,2,,"Attending to royal duties and playing with Ser Pounce.","Interested in governance and animals."
+captainamerica@example.com,password1,Steve,Rogers,02135,5,,"Fighting for justice and freedom as a super soldier.","Interested in American history and leadership."
+joffreybaratheon@example.com,password1,Joffrey,Baratheon,02115,1,,"Ruling the Seven Kingdoms and tormenting subjects.","Interested in archery and collecting medieval weaponry."
+pikachu@example.com,password1,Pikachu,Pokemon,02215,3,,"Training for battles and learning new electric moves.","Interested in exploring new regions and making friends."
+bulbasaur@example.com,password1,Bulbasaur,Pokemon,02130,4,,"Training to evolve and helping in gardens with vines.","Interested in nature and learning new grass type moves."
+charizard@example.com,password1,Charizard,Pokemon,02139,5,,"Flying and battling with fierce fire attacks.","Interested in intense battles and honing fire-breathing skills."
+ramsaybolton@example.com,password1,Ramsay,Bolton,02135,1,,"Engaging in psychological manipulation and sadistic games.","Interested in warfare tactics and hunting."
+tyrionlannister@example.com,password1,Tyrion,Lannister,02115,4,,"Reading books and engaging in political discourse.","Interested in literature, politics, and enjoying a good drink."
+thanos@example.com,password1,Thanos,Titan,02115,5,,"Collecting Infinity Stones and balancing the universe.","Interested in cosmic artifacts and universal balance."
+neo@example.com,password1,Neo,Anderson,02215,3,,"Learning martial arts and hacking into computer systems.","Interested in virtual realities and cyber security."
+jonsnow@example.com,password1,Jon,Snow,02130,4,,"Defending the Wall and leading the Night's Watch.","Interested in sword fighting and the history of Westeros."
+littlefinger@example.com,password1,Petyr,Baelish,02139,2,,"Mastering political intrigue and acquiring power through cunning.","Interested in politics and economics of Westeros."
+spiderman@example.com,password1,Peter,Parker,02135,1,,"Swinging between buildings and fighting crime in New York City.","Interested in science, photography, and protecting the neighborhood."
+batman@example.com,password1,Bruce,Wayne,02115,5,,"Fighting crime in Gotham City and developing new gadgets.","Interested in detective work, martial arts, and advanced technology."
+
