@@ -23,7 +23,6 @@ def upload_pictures_to_s3(file, user):
     """
 
     file_name = file.filename
-    print(f"filename={file_name} type={type(file_name)}")
     file_content = file.read()
 
     temp_file = tempfile.NamedTemporaryFile(delete=False)
@@ -53,8 +52,6 @@ def get_presigned_url(user):
             },
             ExpiresIn=3600,
         )
-        print("url generation successful")
-        print("url=", url)
         return url
     except Exception as e:
         return f"Error getting presigned url: {str(e)}"

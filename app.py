@@ -49,21 +49,18 @@ def get_potential_matches(email):
     # call user.getPotentials
     potentials = user.get_potential_matches()
 
-    print("potentials", potentials)
 
     return jsonify(potentials=potentials)
 
 @app.route("/user/<path:email>/matches", methods=["GET"])
 def get_matches(email):
     user = User.query.filter_by(email=email).first()
-    print('user=', user)
 
     if not user:
         raise NameError("a user with this email does not exist")
     # call user.getmatches
     matches = user.get_matches()
 
-    print("matches", matches)
 
     return jsonify(matches=matches)
 
@@ -71,7 +68,6 @@ def get_matches(email):
 @app.route("/user/<path:email>", methods=["GET"])
 def get_one_user(email):
     user = User.query.filter_by(email=email).first()
-    print("user=", user)
     if not user:
         raise NameError("a user with this email does not exist")
 
@@ -85,8 +81,6 @@ def update_profile(email):
     if not user:
         raise NameError("a user with this email does not exist")
 
-    print('request.form', request.form)
-    print('request.headers',request.headers)
 
     email = request.form.get("email", user.email)
     first_name = request.form.get("firstName", user.first_name)
@@ -109,7 +103,6 @@ def update_profile(email):
 
     form = ProfileForm(MultiDict(data))
 
-    print("\n\n\nform.data=", form.data)
 
     if form.validate():
         user.email = email
@@ -121,9 +114,7 @@ def update_profile(email):
         user.match_radius = match_radius
 
         user.set_location()
-        print("\n\n\n")
         if profile_image_file:
-            print("\n\n\nprofile_image_file truthy")
             user.profile_img_file_name = upload_pictures_to_s3(profile_image_file, user)
 
         db.session.commit()
@@ -135,13 +126,10 @@ def update_profile(email):
 
 @app.route("/user/<path:email>/likes", methods=["POST"])
 def likes(email):
-    print("email=", email)
     likee_id = request.json.get("likeeId", None)
     user = User.query.filter_by(email=email).first()
     likee = User.query.get_or_404(likee_id)
 
-    print("user=", user)
-    print("likee=", likee)
     user.likes.append(likee)
     db.session.commit()
     return jsonify(potentials=user.get_potential_matches()), 201
@@ -149,13 +137,10 @@ def likes(email):
 
 @app.route("/user/<path:email>/rejects", methods=["POST"])
 def rejects(email):
-    print("email=", email)
     rejectee_id = request.json.get("rejecteeId", None)
     user = User.query.filter_by(email=email).first()
     rejectee = User.query.get_or_404(rejectee_id)
 
-    print("user=", user)
-    print("rejectee=", rejectee)
     user.rejects.append(rejectee)
     db.session.commit()
     return jsonify(user=user.serialize()), 201
@@ -177,11 +162,9 @@ def signup():
     password = request.json.get("password", None)
 
     form = AuthForm(data={"email": email, "password": password})
-    print("form=", form.data)
 
     # TODO: catch validation errors and return them
     if form.validate_on_submit():
-        print("\n\n\n0validated\n\n\n")
         try:
             user = User.signup(
                 email=email,
@@ -201,7 +184,6 @@ def signup():
 def login():
     email = request.json.get("email", None)
     password = request.json.get("password", None)
-    print(email, password)
 
     form = AuthForm(data={"email": email, "password": password})
 
@@ -255,11 +237,12 @@ def get_messages_between_users():
 # Global mapping of email to WebSocket
 ws_map = {}
 
-# @app.route('/user/<from_email>/chat/<to_email>', methods=['GET'])
 @sock.route('/user/<from_email>/chat/<to_email>')
 async def chat(ws, from_email, to_email):
+    print("\n\n Hit the WebSocket \n\n")
     from_user = User.query.filter_by(email=from_email).first()
     to_user = User.query.filter_by(email=to_email).first()
+
 
     if not from_user or not to_user:
         await ws.send("Invalid user email")
@@ -279,3 +262,5 @@ async def chat(ws, from_email, to_email):
             await ws_map[to_email].send(msg)
 
         await ws.send(f"Message sent at {message.sent_at}")
+
+
