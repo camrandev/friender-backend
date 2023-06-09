@@ -285,7 +285,7 @@ class User(db.Model):
 
     def get_matches(self):
         matches = [user.serialize() for user in self.likes if user in self.liked_by]
-
+        print('get_matches return=',matches)
         return matches
 
 
