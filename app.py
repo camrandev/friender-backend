@@ -26,7 +26,6 @@ app.config["SQLALCHEMY_DATABASE_URI"] = os.environ["DATABASE_URL"]
 app.config["SQLALCHEMY_ECHO"] = False
 app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = True
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
-# toolbar = DebugToolbarExtension(app)
 app.config["JWT_SECRET_KEY"] = "super-secret"  # Change this!
 jwt = JWTManager(app)
 
@@ -34,6 +33,7 @@ connect_db(app)
 
 
 ### User Routes
+//TODO: change route structure to factor our email
 @app.route("/user/<path:email>/potentials", methods=["GET"])
 def get_potential_matches(email):
     user = User.query.filter_by(email=email).first()
@@ -47,6 +47,7 @@ def get_potential_matches(email):
 
     return jsonify(potentials=potentials)
 
+//TODO: change route structure to factor our email
 @app.route("/user/<path:email>/matches", methods=["GET"])
 def get_matches(email):
     user = User.query.filter_by(email=email).first()
@@ -61,7 +62,7 @@ def get_matches(email):
 
     return jsonify(matches=matches)
 
-
+//TODO: change route structure to factor our email
 @app.route("/user/<path:email>", methods=["GET"])
 def get_one_user(email):
     user = User.query.filter_by(email=email).first()
@@ -72,7 +73,7 @@ def get_one_user(email):
     user = user.serialize()
     return jsonify(user=user)
 
-
+//TODO: change route structure to factor our email
 @app.route("/user/<path:email>/update", methods=["PATCH", "PUT"])
 def update_profile(email):
     user = User.query.filter_by(email=email).first()
@@ -126,7 +127,7 @@ def update_profile(email):
     else:
         return jsonify({"errors": form.errors}), 400
 
-
+//TODO: change route structure to factor our email
 @app.route("/user/<path:email>/likes", methods=["POST"])
 def likes(email):
     print("email=", email)
@@ -140,7 +141,7 @@ def likes(email):
     db.session.commit()
     return jsonify(potentials=user.get_potential_matches()), 201
 
-
+//TODO: change route structure to factor our email
 @app.route("/user/<path:email>/rejects", methods=["POST"])
 def rejects(email):
     print("email=", email)
@@ -164,8 +165,8 @@ def signup():
 
     If form not valid, present form.
 
-    If the there already is a user with that username: flash message
-    and re-present form.
+    If the there already is a user with that username, return an error
+    and re-present the form
     """
     email = request.json.get("email", None)
     password = request.json.get("password", None)
@@ -193,6 +194,9 @@ def signup():
 
 @app.route("/login", methods=["POST"])
 def login():
+    """
+    allows an already registered user to login
+    """
     email = request.json.get("email", None)
     password = request.json.get("password", None)
     print(email, password)
@@ -213,19 +217,3 @@ def login():
     else:
         return jsonify({"errors": form.errors}), 400
 
-
-# Protect a route with jwt_required, which will kick out requests
-# without a valid JWT present.
-@app.route("/protected", methods=["GET"])
-@jwt_required()
-def protected():
-    # Access the identity of the current user with get_jwt_identity
-    current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
-
-
-# for Update Profile route
-# from geoalchemy2.elements import WKTElement
-
-# # For instance, to set the location of a user at latitude 12.34 and longitude 56.78:
-# user.location = WKTElement(f'POINT(12.34 56.78)', srid=4326)
