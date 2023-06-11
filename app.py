@@ -33,7 +33,7 @@ connect_db(app)
 
 
 ### User Routes
-//TODO: change route structure to factor our email
+#TODO: change route structure to factor our email
 @app.route("/user/<path:email>/potentials", methods=["GET"])
 def get_potential_matches(email):
     user = User.query.filter_by(email=email).first()
@@ -47,7 +47,7 @@ def get_potential_matches(email):
 
     return jsonify(potentials=potentials)
 
-//TODO: change route structure to factor our email
+#TODO: change route structure to factor our email
 @app.route("/user/<path:email>/matches", methods=["GET"])
 def get_matches(email):
     user = User.query.filter_by(email=email).first()
@@ -62,7 +62,7 @@ def get_matches(email):
 
     return jsonify(matches=matches)
 
-//TODO: change route structure to factor our email
+#TODO: change route structure to factor our email
 @app.route("/user/<path:email>", methods=["GET"])
 def get_one_user(email):
     user = User.query.filter_by(email=email).first()
@@ -73,7 +73,7 @@ def get_one_user(email):
     user = user.serialize()
     return jsonify(user=user)
 
-//TODO: change route structure to factor our email
+#TODO: change route structure to factor our email
 @app.route("/user/<path:email>/update", methods=["PATCH", "PUT"])
 def update_profile(email):
     user = User.query.filter_by(email=email).first()
@@ -127,7 +127,7 @@ def update_profile(email):
     else:
         return jsonify({"errors": form.errors}), 400
 
-//TODO: change route structure to factor our email
+#TODO: change route structure to factor our email
 @app.route("/user/<path:email>/likes", methods=["POST"])
 def likes(email):
     print("email=", email)
@@ -141,7 +141,7 @@ def likes(email):
     db.session.commit()
     return jsonify(potentials=user.get_potential_matches()), 201
 
-//TODO: change route structure to factor our email
+#TODO: change route structure to factor our email
 @app.route("/user/<path:email>/rejects", methods=["POST"])
 def rejects(email):
     print("email=", email)

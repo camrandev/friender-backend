@@ -59,28 +59,6 @@ class Rejects(db.Model):
     rejectee_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
 
 
-"""
-Like Model
-- PK id
-- liker_id
-- likee_id
-
-scenario 1: camran likes kenny
-- like relationship created
-- camran appears in kenny.liked_by
-- kenny appears in camran.liked
-
-
-Rejects Model
-
-- kenny rejects camran
-- reject relation created
-- camran appears in kenny.rejected
-- kenny appears in camran.rejected_by
-
-"""
-
-
 class User(db.Model):
     """User in the system."""
 
@@ -120,7 +98,6 @@ class User(db.Model):
         default="",
     )
 
-    # location = db.Column(Geometry(geometry_type="POINT", srid=4326))
     location = db.Column(Geography(geometry_type="POINT", srid=4326))
 
     match_radius = db.Column(db.Integer, nullable=False, default=10000)
@@ -164,6 +141,7 @@ class User(db.Model):
     def __repr__(self):
         return f"<User #{self.id}:, {self.email}>"
 
+    # TODO: change route structure to factor our email
     @classmethod
     def signup(cls, email, password):
         """Sign up user.
@@ -181,6 +159,7 @@ class User(db.Model):
         db.session.add(user)
         return user
 
+    # TODO: change route structure to factor our email
     @classmethod
     def authenticate(cls, email, password):
         """Find user with `email` and `password`.
@@ -285,31 +264,5 @@ class User(db.Model):
 
     def get_matches(self):
         matches = [user.serialize() for user in self.likes if user in self.liked_by]
-        print('get_matches return=',matches)
+        print("get_matches return=", matches)
         return matches
-
-
-# # messages
-# class Message(db.Model):
-#     """messages sent between two users"""
-
-#     __tablename__ = "messages"
-
-#     id = db.Column(
-#         db.Integer,
-#         primary_key=True,
-#     )
-
-#     from_user = db.Column(
-#         db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
-
-#     to_user = db.Column(
-#         db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
-
-#     body = db.Column(db.String(255), nullable=False)
-
-#     sent_at = db.Column(
-#         db.DateTime,
-#         nullable=False,
-#         default=datetime.utcnow,
-#     )
