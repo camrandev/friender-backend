@@ -45,7 +45,7 @@ class Likes(db.Model):
 
 
 class Rejects(db.Model):
-    """represents a match between two users"""
+    """represents a rejection between two users"""
 
     __tablename__ = "rejects"
 
