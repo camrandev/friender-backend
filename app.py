@@ -165,7 +165,7 @@ def signup():
 
     If form not valid, present form.
 
-    If the there already is a user with that username, return an error
+    If the there already is a user with that email, return an error
     and re-present the form
     """
     email = request.json.get("email", None)
