@@ -13,7 +13,6 @@ from flask_jwt_extended import (
 from models import connect_db, db, User
 from forms import AuthForm, ProfileForm
 from werkzeug.datastructures import MultiDict
-from s3_helpers import s3, upload_pictures_to_s3, get_presigned_url
 
 load_dotenv()
 
