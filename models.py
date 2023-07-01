@@ -59,28 +59,6 @@ class Rejects(db.Model):
     rejectee_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="cascade"))
 
 
-"""
-Like Model
-- PK id
-- liker_id
-- likee_id
-
-scenario 1: camran likes kenny
-- like relationship created
-- camran appears in kenny.liked_by
-- kenny appears in camran.liked
-
-
-Rejects Model
-
-- kenny rejects camran
-- reject relation created
-- camran appears in kenny.rejected
-- kenny appears in camran.rejected_by
-
-"""
-
-
 class User(db.Model):
     """User in the system."""
 
@@ -218,40 +196,6 @@ class User(db.Model):
             else DEFAULT_IMAGE_URL,
         }
 
-    # method - get potentials
-    """
-    from geoalchemy2 import Geometry
-    from sqlalchemy import func
-    from flask_sqlalchemy import SQLAlchemy
-
-    db = SQLAlchemy()
-
-    class User(db.Model):
-        __tablename__ = 'users'
-
-        id = db.Column(db.Integer, primary_key=True)
-        name = db.Column(db.String(255))
-        location_id = db.Column(db.Integer, db.ForeignKey('locations.id'))
-
-        location = db.relationship('Location')
-
-    class Location(db.Model):
-        __tablename__ = 'locations'
-
-        id = db.Column(db.Integer, primary_key=True)
-        coordinates = db.Column(Geometry('POINT'))
-
-    # Perform a geolocation query example
-    target_latitude = 37.7749
-    target_longitude = -122.4194
-    target_point = f'POINT({target_longitude} {target_latitude})'
-    distance_threshold = 1000  # In meters
-
-    # Find users within the given distance threshold of the target point
-    users_within_distance = User.query.join(User.location).filter(
-        func.ST_DWithin(Location.coordinates, func.ST_GeomFromText(target_point), distance_threshold)
-    ).all()
-    """
 
     def set_location(self):
         """Sets the user location based on their zip code"""
@@ -260,10 +204,6 @@ class User(db.Model):
 
     def nearby_users(self):
         """Gets users within curren users radius"""
-        # radius = self.match_radius / 24902 * 360
-        # nearby_users = User.query.filter(
-        #     ST_DWithin(User.location, self.location, radius)
-        # ).all()
 
         radius = self.match_radius * 1609.34  # convert miles to meters
         nearby_users = User.query.filter(
